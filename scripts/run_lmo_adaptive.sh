@@ -205,7 +205,13 @@ IMAGE_TIMES="$OUTPUT_DIR/reports/reconstructed_image_times.csv"
   --output-image-times-csv "$IMAGE_TIMES" \
   > "$OUTPUT_DIR/reports/reconstructed_runtime_stdout.json"
 
-FINAL_CSV="$OUTPUT_DIR/predictions/${RUN_ID}_lmo-test.csv"
+# BOP Toolkit expects:
+#   <method>_<dataset>-<split>.csv
+#
+# Replace underscores in RUN_ID so the method name does not interfere
+# with BOP Toolkit filename parsing.
+BOP_METHOD="${RUN_ID//_/-}"
+FINAL_CSV="$OUTPUT_DIR/predictions/${BOP_METHOD}_lmo-test.csv"
 "$PYTHON_BIN" -m gigapose_efficiency.cli merge-groups \
   "${REFINED_INPUTS[@]}" \
   --output "$FINAL_CSV" \
@@ -218,7 +224,7 @@ FINAL_CSV="$OUTPUT_DIR/predictions/${RUN_ID}_lmo-test.csv"
   --output "$OUTPUT_DIR/reports/sha256_manifest.json" >/dev/null
 
 if [[ "$RUN_EVAL" -eq 1 ]]; then
-  "$SCRIPT_DIR/evaluate_bop19.sh" \
+  bash "$SCRIPT_DIR/evaluate_bop19.sh" \
     --workspace "$WORKSPACE" \
     --bop-toolkit "$BOP_TOOLKIT_DIR" \
     --python "$PYTHON_BIN" \

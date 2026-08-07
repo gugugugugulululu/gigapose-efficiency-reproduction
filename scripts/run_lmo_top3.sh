@@ -149,7 +149,13 @@ if [[ "$REFINE_RC" -ne 0 ]]; then
   log "warning: refine.py returned $REFINE_RC but produced a CSV; continuing after validation"
 fi
 
-FINAL_CSV="$OUTPUT_DIR/predictions/${RUN_ID}_lmo-test.csv"
+# BOP Toolkit expects:
+#   <method>_<dataset>-<split>.csv
+#
+# Method names must therefore not contain "_" because "_" separates the
+# method name from the dataset/split component.
+BOP_METHOD="${RUN_ID//_/-}"
+FINAL_CSV="$OUTPUT_DIR/predictions/${BOP_METHOD}_lmo-test.csv"
 cp -f "$REFINED_FOUND" "$FINAL_CSV"
 "$PYTHON_BIN" -m gigapose_efficiency.cli validate \
   --csv "$FINAL_CSV" --rows 1445 --targets 1445 --images 200 --hypotheses 1 --lmo-objects \
@@ -159,7 +165,7 @@ cp -f "$REFINED_FOUND" "$FINAL_CSV"
   --output "$OUTPUT_DIR/reports/sha256_manifest.json" >/dev/null
 
 if [[ "$RUN_EVAL" -eq 1 ]]; then
-  "$SCRIPT_DIR/evaluate_bop19.sh" \
+  bash "$SCRIPT_DIR/evaluate_bop19.sh" \
     --workspace "$WORKSPACE" \
     --bop-toolkit "$BOP_TOOLKIT_DIR" \
     --python "$PYTHON_BIN" \

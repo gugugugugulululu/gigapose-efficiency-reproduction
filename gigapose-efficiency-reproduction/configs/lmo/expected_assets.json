@@ -1,0 +1,12 @@
+{
+  "dataset": "lmo",
+  "expected_images": 200,
+  "expected_targets": 1445,
+  "expected_objects": [1, 5, 6, 8, 9, 10, 11, 12],
+  "baseline_hypotheses_per_target": 5,
+  "baseline_multi_rows": 7225,
+  "top3_multi_rows": 4335,
+  "adaptive_multi_rows": 5268,
+  "gigapose_commit": "388e8bddd8a5443e284a7f70ad103d03f3f461c5",
+  "checkpoint_sha256": "0f60a23b03ddc41d2135c916ed1e66fb16f814f612dbde0305ae5a2c0f45c932"
+}

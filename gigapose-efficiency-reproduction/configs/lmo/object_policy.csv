@@ -1,0 +1,9 @@
+obj_id,object_name,k,i,expected_targets
+1,ape,4,4,175
+5,can,5,4,199
+6,cat,3,4,171
+8,driller,3,5,200
+9,duck,4,4,180
+10,eggbox,4,4,180
+11,glue,3,5,140
+12,holepuncher,3,3,200

@@ -1,0 +1,25 @@
+{
+  "note": "Reference values from the dissertation. Compute time varies with hardware and timing boundary.",
+  "combined_top3": {
+    "ar_percent": 59.14,
+    "mean_pipeline_compute_time_s_per_image": 4.48,
+    "timing_type": "directly recorded"
+  },
+  "combined_object_adaptive": {
+    "ar_percent": 59.54,
+    "mean_pipeline_compute_time_s_per_image": 4.73,
+    "timing_type": "reconstructed from measured object-group contributions"
+  },
+  "historical_intermediate_top3": {
+    "ar_percent": 59.1435,
+    "ar_vsd_percent": 46.3301,
+    "ar_mssd_percent": 58.6228,
+    "ar_mspd_percent": 72.4775,
+    "csv_time_s_per_image": 4.902328
+  },
+  "object_adaptive_policy": {
+    "targets": 1445,
+    "retained_hypotheses": 5268,
+    "average_hypotheses_per_target": 3.645675
+  }
+}

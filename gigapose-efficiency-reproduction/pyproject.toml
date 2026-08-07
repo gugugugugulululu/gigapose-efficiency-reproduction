@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gigapose-efficiency-reproduction"
+version = "0.1.0"
+description = "Reproducible LM-O Top-3 and object-adaptive GigaPose-MegaPose experiments"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Xinjie Ji"}]
+dependencies = [
+  "pandas>=2.2,<3",
+  "numpy>=2,<3",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.scripts]
+gigapose-efficiency = "gigapose_efficiency.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

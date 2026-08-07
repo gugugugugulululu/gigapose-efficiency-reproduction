@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "GigaPose--MegaPose Inference-Efficiency Reproduction"
+message: "Please cite this repository and the original GigaPose and MegaPose papers."
+type: software
+authors:
+  - family-names: Ji
+    given-names: Xinjie
+year: 2026
+version: 0.1.0
+license: MIT

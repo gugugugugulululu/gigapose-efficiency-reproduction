@@ -124,15 +124,150 @@ PREPARED_DIR="$OUTPUT_DIR/groups/prepared"
   > "$OUTPUT_DIR/reports/adaptive_groups.json"
 
 GROUP_TSV="$OUTPUT_DIR/reports/group_commands.tsv"
-"$PYTHON_BIN" - "$PREPARED_DIR/manifest.json" > "$GROUP_TSV" <<'PY'
+
+# Do not redirect Python stdout into the TSV.
+#
+# The restored formal GigaPose runtime may emit process-bootstrap messages
+# to stdout when Python starts. If stdout is used as a machine-readable TSV
+# transport, such messages become bogus group rows and can leave GROUP_MAIN
+# and GROUP_MULTI empty.
+#
+# Instead, Python writes the TSV directly to the requested path.
+"$PYTHON_BIN" - "$PREPARED_DIR/manifest.json" "$GROUP_TSV" <<'PY'
+import csv
 import json
 import sys
-manifest = json.load(open(sys.argv[1], encoding="utf-8"))
-for group in manifest["groups"]:
-    print("\t".join([
-        group["group"], str(group["k"]), str(group["i"]), str(group["targets"]),
-        group["main_csv"], group["multi_csv"],
-    ]))
+from pathlib import Path
+
+manifest_path = Path(sys.argv[1])
+output_path = Path(sys.argv[2])
+
+with manifest_path.open("r", encoding="utf-8") as handle:
+    manifest = json.load(handle)
+
+groups = manifest["groups"]
+
+output_path.parent.mkdir(parents=True, exist_ok=True)
+
+with output_path.open(
+    "w",
+    encoding="utf-8",
+    newline="",
+) as handle:
+    writer = csv.writer(
+        handle,
+        delimiter="\t",
+        lineterminator="\n",
+    )
+
+    for group in groups:
+        writer.writerow([
+            group["group"],
+            str(group["k"]),
+            str(group["i"]),
+            str(group["targets"]),
+            group["main_csv"],
+            group["multi_csv"],
+        ])
+PY
+
+# Fail fast before any GPU work.
+#
+# LM-O object-adaptive policy currently contains exactly five K/I groups,
+# and every row must contain six tab-separated fields:
+#
+#   group, K, I, targets, main_csv, multi_csv
+"$PYTHON_BIN" - "$GROUP_TSV" <<'PY'
+import csv
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+
+with path.open(
+    "r",
+    encoding="utf-8",
+    newline="",
+) as handle:
+    rows = list(
+        csv.reader(
+            handle,
+            delimiter="\t",
+        )
+    )
+
+if len(rows) != 5:
+    raise RuntimeError(
+        f"group_commands.tsv rows={len(rows)}, expected=5"
+    )
+
+expected_groups = {
+    "k3_i3",
+    "k3_i4",
+    "k3_i5",
+    "k4_i4",
+    "k5_i4",
+}
+
+actual_groups = set()
+
+for index, row in enumerate(rows, start=1):
+    if len(row) != 6:
+        raise RuntimeError(
+            f"group_commands.tsv line {index} has "
+            f"{len(row)} fields, expected=6: {row!r}"
+        )
+
+    (
+        group_name,
+        k_value,
+        i_value,
+        targets,
+        main_csv,
+        multi_csv,
+    ) = row
+
+    if not group_name:
+        raise RuntimeError(
+            f"line {index}: empty group_name"
+        )
+
+    if not main_csv:
+        raise RuntimeError(
+            f"line {index}: empty main_csv"
+        )
+
+    if not multi_csv:
+        raise RuntimeError(
+            f"line {index}: empty multi_csv"
+        )
+
+    if not Path(main_csv).is_file():
+        raise RuntimeError(
+            f"line {index}: missing main_csv: {main_csv}"
+        )
+
+    if not Path(multi_csv).is_file():
+        raise RuntimeError(
+            f"line {index}: missing multi_csv: {multi_csv}"
+        )
+
+    int(k_value)
+    int(i_value)
+    int(targets)
+
+    actual_groups.add(group_name)
+
+if actual_groups != expected_groups:
+    raise RuntimeError(
+        "unexpected adaptive groups: "
+        f"{sorted(actual_groups)}"
+    )
+
+print("GROUP COMMAND TSV: PASS")
+
+for row in rows:
+    print("\t".join(row))
 PY
 
 REFINED_INPUTS=()

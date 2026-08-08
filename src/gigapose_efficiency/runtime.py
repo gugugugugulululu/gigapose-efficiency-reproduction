@@ -53,13 +53,24 @@ def reconstruct_grouped_runtime(
         refined_group = load_bop_csv(refined_group_csv)
         source_times = _image_times(source_group)
         refined_times = _image_times(refined_group)
-        if not refined_times.index.equals(source_times.index):
-            missing_source = refined_times.index.difference(source_times.index)
-            missing_refined = source_times.index.difference(refined_times.index)
+        # Image coverage is a set property, not an ordering property.
+        #
+        # MegaPose may emit the same image keys in a different order from the
+        # group source CSV. MultiIndex.equals() is order-sensitive and therefore
+        # incorrectly rejects valid group outputs whose coverage is identical.
+        #
+        # First detect genuine missing/extra image keys. Then explicitly align
+        # refined timings to the source order before arithmetic.
+        missing_source = refined_times.index.difference(source_times.index)
+        missing_refined = source_times.index.difference(refined_times.index)
+
+        if len(missing_source) or len(missing_refined):
             raise ValueError(
                 f"group image coverage mismatch; missing source={list(missing_source[:5])}, "
                 f"missing refined={list(missing_refined[:5])}"
             )
+
+        refined_times = refined_times.reindex(source_times.index)
 
         if group_time_mode == "total":
             increments = refined_times - source_times
